@@ -1,0 +1,74 @@
+spring:
+  ai:
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${AI_API_KEY}
+      chat:
+        options:
+          model: qwen-plus
+      embedding:
+        api-key: ${AI_EMBEDDING_API_KEY}
+        base-url: https://dashscope.aliyuncs.com/compatible-mode
+        options:
+          model: text-embedding-v4
+
+  # 文件上传大小限制配置
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2MB
+
+  datasource: # PGSQL 连接URL（格式：jdbc:postgresql://主机:端口/数据库名）
+      url: jdbc:postgresql://localhost:5432/jmind_agent
+      username: postgres
+      password: 123456
+      driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+  # Added: Thymeleaf 配置
+  thymeleaf:
+    mode: HTML
+    encoding: UTF-8
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false
+
+  # 邮件配置
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+
+jwt:
+  secret: jmindagent202603161234567890abcdef
+  expire: 86400000
+
+mail:
+  from: ${MAIL_FROM}
+  code:
+    expire-time: 300000
+
+# Tomcat 文件上传限制
+server:
+  tomcat:
+    max-http-form-post-size: 52428800

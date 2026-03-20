@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理 - JMindAgent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-color: #f9fafb;
+            --sidebar-width: 280px;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .brand-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-item:hover {
+            background: var(--bg-color);
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .nav-item.active .nav-icon {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-navbar {
+            height: 70px;
+            padding: 0 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-menu-container {
+            position: relative;
+        }
+
+        .user-menu-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .user-menu-trigger:hover {
+            background: var(--bg-color);
+        }
+
+        .user-menu-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+        }
+
+        .user-menu-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 200px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: 1px solid #e5e7eb;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            transform-origin: top right;
+            display: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .user-menu-dropdown.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .user-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin: 4px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .user-menu-item:hover {
+            background: var(--bg-color);
+        }
+
+        .user-menu-item.danger {
+            color: #ef4444;
+        }
+
+        .user-menu-item.danger:hover {
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .content-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 300px;
+            padding: 10px 16px 10px 40px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .btn-create {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .knowledge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        .knowledge-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .knowledge-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .knowledge-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .knowledge-card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .knowledge-card-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .knowledge-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .knowledge-card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .knowledge-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .knowledge-card-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .knowledge-card-stats {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .stat-badge i {
+            font-size: 11px;
+        }
+
+        .card-status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-inactive {
+            background: rgba(156, 163, 175, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .card-actions {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .knowledge-card:hover .card-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn.edit:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-large {
+            max-width: 800px;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-title i {
+            color: var(--primary-color);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(80vh - 80px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--danger-color);
+            margin-left: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .form-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-switch:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .switch-input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-section-title i {
+            color: var(--primary-color);
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            width: 120px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .document-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: var(--bg-color);
+            border: 1px solid #e5e7eb;
+        }
+
+        .document-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .document-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .document-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .document-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: var(--bg-color);
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: #d1d5db;
+            background: var(--bg-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            border-radius: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 40px;
+        }
+
+        .empty-state-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <span>JMindAgent</span>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <a href="/chat" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <span class="nav-text">智能对话</span>
+                </a>
+                <a href="/agent" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <span class="nav-text">智能体管理</span>
+                </a>
+                <a href="/knowledge" class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <span class="nav-text">知识库管理</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 顶部导航栏 -->
+            <div class="top-navbar">
+                <div class="navbar-left">
+                    <div class="page-title">知识库管理</div>
+                </div>
+                <div class="navbar-right">
+                    <div class="user-menu-container">
+                        <div class="user-menu-trigger" onclick="toggleUserMenu()">
+                            <img src="" alt="头像" class="user-menu-avatar" id="userMenuAvatar">
+                            <span class="user-menu-name" id="userMenuName">用户</span>
+                        </div>
+                        <div class="user-menu-dropdown" id="userMenuDropdown">
+                            <a href="/user/profile" class="user-menu-item">
+                                <div class="user-menu-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span>用户中心</span>
+                            </a>
+                            <div class="user-menu-item danger" onclick="logout()">
+                                <div class="user-menu-icon">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </div>
+                                <span>退出登录</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <div class="content-container">
+                    <!-- 工具栏 -->
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" id="searchInput" placeholder="搜索知识库..." oninput="filterKnowledge()">
+                            </div>
+                        </div>
+                        <button class="btn-create" onclick="openCreateModal()">
+                            <i class="fas fa-plus"></i>
+                            <span>创建知识库</span>
+                        </button>
+                    </div>
+
+                    <!-- 知识库列表 -->
+                    <div class="knowledge-grid" id="knowledgeGrid">
+                        <!-- 动态加载知识库卡片 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建知识库弹窗 -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>创建知识库</span>
+                </div>
+                <button class="modal-close" onclick="closeCreateModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createForm">
+                    <div class="form-group">
+                        <label class="form-label required">知识库名称</label>
+                        <input type="text" class="form-input" id="createName" placeholder="请输入知识库名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">知识库描述</label>
+                        <textarea class="form-input form-textarea" id="createDesc" placeholder="请输入知识库描述" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">启用状态</label>
+                        <div class="form-switch" onclick="toggleCreateStatus()">
+                            <input type="checkbox" class="switch-input" id="createStatus">
+                            <span>启用知识库（创建后即可用于检索）</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitCreate()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑知识库弹窗 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    <span>编辑知识库</span>
+                </div>
+                <button class="modal-close" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editKnowledgeId">
+                    <div class="form-group">
+                        <label class="form-label required">知识库名称</label>
+                        <input type="text" class="form-input" id="editName" placeholder="请输入知识库名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">知识库描述</label>
+                        <textarea class="form-input form-textarea" id="editDesc" placeholder="请输入知识库描述" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">启用状态</label>
+                        <div class="form-switch" onclick="toggleEditStatus()">
+                            <input type="checkbox" class="switch-input" id="editStatus">
+                            <span>启用知识库</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitEdit()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 知识库详情弹窗 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>知识库详情</span>
+                </div>
+                <button class="modal-close" onclick="closeDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <!-- 动态加载详情内容 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 全局变量
+        let knowledgeList = [];
+        let selectedTools = [];
+
+        // 页面加载时获取用户信息和知识库列表
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadKnowledgeList();
+        });
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const userInfo = JSON.parse(atob(token.split('.')[1]));
+                    document.getElementById('userMenuName').textContent = userInfo.username || '用户';
+                    document.getElementById('userMenuAvatar').src = userInfo.avatar || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23667eea"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+                } catch (e) {
+                    console.error('解析用户信息失败', e);
+                }
+            }
+        }
+
+        // 切换用户菜单
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userMenuDropdown');
+            const arrow = document.getElementById('userMenuArrow');
+            dropdown.classList.toggle('show');
+            arrow?.classList.toggle('rotate');
+        }
+
+        // 点击外部关闭用户菜单
+        document.addEventListener('click', function(e) {
+            const userMenu = document.querySelector('.user-menu-container');
+            if (!userMenu.contains(e.target)) {
+                const dropdown = document.getElementById('userMenuDropdown');
+                const arrow = document.getElementById('userMenuArrow');
+                dropdown.classList.remove('show');
+                arrow?.classList.remove('rotate');
+            }
+        });
+
+        // 退出登录
+        function logout() {
+            Swal.fire({
+                title: '确认退出',
+                text: '确定要退出登录吗？',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '退出',
+                cancelButtonText: '取消'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                }
+            });
+        }
+
+        // 加载知识库列表
+        async function loadKnowledgeList() {
+            try {
+                const response = await fetch('/api/rag/kb/list?pageNum=1&pageSize=10', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                const container = document.getElementById('knowledgeList');
+                if (result.code === 200 && result.data) {
+                    // 适配后端返回的数据结构
+                    knowledgeList = result.data.list || [];
+                    renderKnowledgeList();
+                } else {
+                    Swal.fire('提示', result.msg || '加载知识库失败', 'info');
+                }
+            } catch (error) {
+                console.error('加载知识库列表失败', error);
+                Swal.fire('错误', '网络请求失败', 'error');
+            }
+        }
+
+        // 渲染知识库列表
+        function renderKnowledgeList() {
+            const grid = document.getElementById('knowledgeGrid');
+
+            if (knowledgeList.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div class="empty-state-title">暂无知识库</div>
+                        <div class="empty-state-desc">点击右上角按钮创建您的第一个知识库</div>
+                        <button class="btn btn-primary" onclick="openCreateModal()">
+                            <i class="fas fa-plus"></i> 创建知识库
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = knowledgeList.map(kb => {
+                // 适配后端字段名
+                const kbId = kb.kbId || kb.knowledgeId;
+                const kbName = kb.kbName || kb.knowledgeName;
+                const kbDesc = kb.kbDesc || kb.description;
+                const docCount = kb.docCount || 0;
+                const kbStatus = kb.kbStatus;
+                const createTime = kb.createTime;
+
+                // 根据状态生成不同的样式和内容
+                const isActive = kbStatus === 1 || kbStatus === true;
+                const statusText = isActive ? '已启用' : '未启用';
+                const statusClass = isActive ? 'status-active' : 'status-inactive';
+                const statusColor = isActive ? '#10b981' : '#9ca3af';
+
+                return `
+                    <div class="knowledge-card" onclick="showKnowledgeDetail('${kbId}')">
+                        <div class="card-status ${statusClass}" style="border-left-color: ${statusColor};">
+                            <i class="fas ${isActive ? 'fa-check-circle' : 'fa-times-circle'}" style="color: ${statusColor};"></i>
+                            <span style="color: ${statusColor};">${statusText}</span>
+                        </div>
+                        <div class="knowledge-card-header">
+                            <div class="knowledge-card-icon" style="${!isActive ? 'opacity: 0.5;' : ''}">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="knowledge-card-info">
+                                <div class="knowledge-card-title" style="${!isActive ? 'opacity: 0.6;' : ''}">${escapeHtml(kbName)}</div>
+                                <div class="knowledge-card-desc">${escapeHtml(kbDesc || '暂无描述')}</div>
+                            </div>
+                        </div>
+                        <div class="knowledge-card-meta">
+                            <div class="knowledge-card-time">
+                                <i class="far fa-clock"></i>
+                                ${formatDate(createTime)}
+                            </div>
+                            <div class="knowledge-card-stats">
+                                <div class="stat-badge">
+                                    <i class="fas fa-file"></i>
+                                    <span>${docCount} 文档</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-actions" onclick="event.stopPropagation()">
+                            <button class="action-btn edit" onclick="openEditModal('${kbId}')" title="编辑">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="deleteKnowledge('${kbId}')" title="删除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 打开创建弹窗
+        function openCreateModal() {
+            document.getElementById('createForm').reset();
+            document.getElementById('createStatus').checked = true;
+            document.getElementById('createModal').classList.add('show');
+        }
+
+        // 关闭创建弹窗
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('show');
+        }
+
+        // 切换创建表单状态
+        function toggleCreateStatus() {
+            const checkbox = document.getElementById('createStatus');
+            checkbox.checked = !checkbox.checked;
+        }
+
+        // 提交创建
+        async function submitCreate() {
+            const name = document.getElementById('createName').value.trim();
+            const desc = document.getElementById('createDesc').value.trim();
+            const status = document.getElementById('createStatus').checked ? 1 : 0;
+
+            if (!name) {
+                Swal.fire('提示', '请输入知识库名称', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/rag/kb/create', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        kbName: name,
+                        kbDesc: desc,
+                        kbStatus: status
+                    })
+                });
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    Swal.fire('成功', '知识库创建成功', 'success');
+                    closeCreateModal();
+                    loadKnowledgeList();
+                } else {
+                    Swal.fire('错误', result.msg || '创建失败', 'error');
+                }
+            } catch (error) {
+                console.error('创建知识库失败', error);
+                Swal.fire('错误', '网络请求失败', 'error');
+            }
+        }
+
+        // 提交编辑
+        async function submitEdit() {
+            const knowledgeId = document.getElementById('editKnowledgeId').value;
+            const name = document.getElementById('editName').value.trim();
+            const desc = document.getElementById('editDesc').value.trim();
+            const status = document.getElementById('editStatus').checked ? 1 : 0;
+
+            if (!name) {
+                Swal.fire('提示', '请输入知识库名称', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/rag/kb/update/${knowledgeId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        kbName: name,
+                        kbDesc: desc,
+                        kbStatus: status
+                    })
+                });
+
+                const result = await response.json();
+                if (result.code === 200) {
+                    Swal.fire('成功', '知识库更新成功', 'success');
+                    closeEditModal();
+                    loadKnowledgeList();
+                } else {
+                    Swal.fire('错误', result.msg || '更新失败', 'error');
+                }
+            } catch (error) {
+                console.error('更新知识库失败', error);
+                Swal.fire('错误', '网络请求失败', 'error');
+            }
+        }
+
+        // 打开编辑弹窗
+        async function openEditModal(knowledgeId) {
+            const kb = knowledgeList.find(k => (k.kbId || k.knowledgeId) === knowledgeId);
+            if (!kb) return;
+
+            document.getElementById('editKnowledgeId').value = kb.kbId || kb.knowledgeId;
+            document.getElementById('editName').value = kb.kbName || kb.knowledgeName;
+            document.getElementById('editDesc').value = kb.kbDesc || kb.description || '';
+            // 根据后端返回的 kbStatus 字段设置状态（1-启用，0-禁用）
+            document.getElementById('editStatus').checked = (kb.kbStatus === 1 || kb.kbStatus === true);
+
+            document.getElementById('editModal').classList.add('show');
+        }
+
+        // 关闭编辑弹窗
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+
+        // 切换编辑表单状态
+        function toggleEditStatus() {
+            const checkbox = document.getElementById('editStatus');
+            checkbox.checked = !checkbox.checked;
+        }
+
+        // 显示知识库详情
+        async function showKnowledgeDetail(knowledgeId) {
+            const kb = knowledgeList.find(k => (k.kbId || k.knowledgeId) === knowledgeId);
+            if (!kb) return;
+
+            const kbId = kb.kbId || kb.knowledgeId;
+            const kbStatus = kb.kbStatus;
+            const isActive = kbStatus === 1 || kbStatus === true;
+            const statusText = isActive ? '已启用' : '未启用';
+            const statusClass = isActive ? 'bg-success' : 'bg-secondary';
+
+            const detailContent = document.getElementById('detailContent');
+            detailContent.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span>基本信息</span>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">知识库名称</div>
+                        <div class="detail-value">${escapeHtml(kb.kbName || kb.knowledgeName)}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">知识库描述</div>
+                        <div class="detail-value">${escapeHtml(kb.kbDesc || kb.description || '暂无描述')}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">启用状态</div>
+                        <div class="detail-value">
+                            <span class="badge ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">文档数量</div>
+                        <div class="detail-value">${kb.docCount || 0}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">创建时间</div>
+                        <div class="detail-value">${formatDate(kb.createTime)}</div>
+                    </div>
+                    ${kb.updateTime ? `
+                    <div class="detail-row">
+                        <div class="detail-label">更新时间</div>
+                        <div class="detail-value">${formatDate(kb.updateTime)}</div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">
+                        <i class="fas fa-file-alt"></i>
+                        <span>文档列表</span>
+                    </div>
+                    <div class="document-list" id="documentList-${kbId}">
+                        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            <i class="fas fa-spinner fa-spin"></i> 加载中...
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="openUploadModal('${kbId}')">
+                        <i class="fas fa-upload me-2"></i>上传文档
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteKnowledge('${kbId}')">
+                        <i class="fas fa-trash me-2"></i>删除知识库
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('detailModal').classList.add('show');
+
+            // 加载文档列表
+            loadDocumentList(kbId);
+        }
+
+        // 加载文档列表
+        async function loadDocumentList(knowledgeId) {
+            try {
+                const response = await fetch(`/api/rag/doc/list?kbId=${knowledgeId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                const container = document.getElementById(`documentList-${knowledgeId}`);
+
+                if (result.code === 200 && result.data && result.data.list && result.data.list.length > 0) {
+                    container.innerHTML = result.data.list.map(doc => {
+                        const docIcon = getDocIcon(doc.docType);
+                        const statusBadge = getDocStatusBadge(doc.docStatus);
+
+                        return `
+                            <div class="document-item">
+                                <div class="document-icon">
+                                    <i class="fas fa-file-${docIcon}"></i>
+                                </div>
+                                <div class="document-info">
+                                    <div class="document-name">${escapeHtml(doc.docName)}</div>
+                                    <div class="document-meta">
+                                        <span>${formatFileSize(doc.docSize)}</span> ·
+                                        <span>${doc.chunkCount || 0} 分块</span> ·
+                                        <span>${formatDate(doc.createTime)}</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="badge ${statusBadge}" style="min-width: 60px;">
+                                        ${doc.statusDesc || getStatusText(doc.docStatus)}
+                                    </span>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteDocument('${doc.docId}', '${knowledgeId}')" title="删除文档">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            <i class="fas fa-inbox" style="font-size: 40px; margin-bottom: 12px;"></i>
+                            <div>暂无文档</div>
+                            <div style="margin-top: 16px;">
+                                <button class="btn btn-primary btn-sm" onclick="openUploadModal('${knowledgeId}')">
+                                    <i class="fas fa-upload me-2"></i>上传文档
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载文档列表失败', error);
+                const container = document.getElementById(`documentList-${knowledgeId}`);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--danger-color);">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 40px; margin-bottom: 12px;"></i>
+                        <div>加载失败</div>
+                        <div style="font-size: 13px; margin-top: 8px;">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 获取文档图标
+        function getDocIcon(docType) {
+            const icons = {
+                'txt': 'file-alt',
+                'pdf': 'file-pdf',
+                'md': 'file-code',
+                'markdown': 'file-code'
+            };
+            return icons[docType?.toLowerCase()] || 'file';
+        }
+
+        // 获取文档状态徽章
+        function getDocStatusBadge(status) {
+            const badges = {
+                1: 'bg-warning text-dark',  // 处理中
+                2: 'bg-success',             // 已完成
+                3: 'bg-danger'               // 失败
+            };
+            return badges[status] || 'bg-secondary';
+        }
+
+        // 获取状态文本
+        function getStatusText(status) {
+            const texts = {
+                1: '处理中',
+                2: '已完成',
+                3: '失败'
+            };
+            return texts[status] || '未知';
+        }
+
+        // 打开上传文档弹窗
+        function openUploadModal(knowledgeId) {
+            closeDetailModal();
+
+            Swal.fire({
+                title: '上传文档',
+                html: `
+                    <input type="file" id="docFile" class="form-control" accept=".txt,.pdf,.md,.markdown" />
+                    <small class="text-muted">支持格式：txt, pdf, md, markdown</small>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '上传',
+                cancelButtonText: '取消',
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#6b7280',
+                didOpen: () => {
+                    const fileInput = document.getElementById('docFile');
+                    fileInput.focus();
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const fileInput = document.getElementById('docFile');
+                    const file = fileInput.files[0];
+
+                    if (!file) {
+                        Swal.fire('提示', '请选择文件', 'warning');
+                        return;
+                    }
+
+                    uploadDocument(knowledgeId, file);
+                }
+            });
+        }
+
+        // 上传文档
+        function uploadDocument(knowledgeId, file) {
+            const formData = new FormData();
+            formData.append('kbId', knowledgeId);
+            formData.append('file', file);
+
+            const token = localStorage.getItem('token');
+
+            // 显示进度弹窗
+            let progressSwal;
+
+            fetch('/api/rag/doc/upload-stream', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('上传失败：' + response.statusText);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    let buffer = '';
+                    let isReadingMultilineData = false; // 标志位，表示我们正在读取一个跨多行的 data 块
+                    let multilineDataBuffer = ''; // 用于缓存跨行 data 的内容
+
+                    // 创建进度提示框
+                    Swal.fire({
+                        title: '上传文档',
+                        html: `
+                <div style="width: 100%;">
+                    <div id="progress-message" style="margin-bottom: 12px; font-size: 14px;">正在准备上传...</div>
+                    <div class="progress" style="height: 20px;">
+                        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated"
+                            role="progressbar"
+                            style="width: 0%"
+                            aria-valuenow="0"
+                            aria-valuemin="0"
+                            aria-valuemax="100">
+                            0%
+                        </div>
+                    </div>
+                    <div id="progress-stage" style="margin-top: 8px; font-size: 12px; color: #6b7280;"></div>
+                </div>
+            `,
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            progressSwal = Swal;
+                        }
+                    });
+
+                    // 读取流式数据
+                    function readStream() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) {
+                                // 如果数据流结束但还在读取多行数据块，需要处理剩余内容
+                                if (isReadingMultilineData && multilineDataBuffer.trim()) {
+                                    processSSEDataChunk(multilineDataBuffer.trim());
+                                }
+                                console.log("SSE Stream finished.");
+                                setTimeout(() => {
+                                    if (progressSwal) {
+                                        progressSwal.fire({
+                                            icon: 'success',
+                                            title: '上传成功',
+                                            text: '文档处理完成！',
+                                            timer: 2000
+                                        }).then(() => {
+                                            loadKnowledgeList(); // 刷新知识库列表
+                                        });
+                                    }
+                                }, 500);
+                                return;
+                            }
+
+                            // 解码数据
+                            const chunk = decoder.decode(value, { stream: true });
+                            buffer += chunk;
+
+                            // 按行分割处理
+                            const lines = buffer.split(/\r?\n/); // 使用 \r?\n 以兼容不同换行符
+                            buffer = lines.pop() || ''; // 将最后一行不完整的部分放回buffer
+
+                            for (const line of lines) {
+                                const trimmedLine = line.trim();
+
+                                // 如果正在读取一个多行的 data 块
+                                if (isReadingMultilineData) {
+                                    // 检查当前行是否是新 SSE 消息的开始，如果是，则当前 data 块结束
+                                    if (trimmedLine.startsWith('data:') || trimmedLine.startsWith('event:')) {
+                                        // 处理之前累积的 data 块
+                                        processSSEDataChunk(multilineDataBuffer.trim());
+                                        // 重置标志位
+                                        isReadingMultilineData = false;
+                                        multilineDataBuffer = '';
+                                    } else {
+                                        // 否则，将此行追加到 data 块缓存中
+                                        multilineDataBuffer += line + '\n'; // 保留换行符
+                                        continue; // 继续下一行，因为它属于当前 data 块
+                                    }
+                                }
+
+                                // 处理新行
+                                if (trimmedLine.startsWith('data:')) {
+                                    const dataContent = trimmedLine.slice(5).trim();
+
+                                    // 检查是否是简单的 [DONE] 标记
+                                    if (dataContent === '[DONE]') {
+                                        continue;
+                                    }
+
+                                    // 检查 data 后面的内容是否以 [ 开头，这通常意味着它是一个长的 JSON 数组，跨越多行
+                                    if (dataContent.startsWith('[')) {
+                                        // 这是一个单行的完整 JSON，直接处理
+                                        processSSEDataChunk(dataContent);
+                                    } else {
+                                        // 这是一个跨行的 data 块的开始
+                                        isReadingMultilineData = true;
+                                        multilineDataBuffer = dataContent + '\n'; // 将当前行内容放入缓存，并加上换行符
+                                    }
+                                }
+                                else if (trimmedLine.startsWith('event:')) {
+                                    const eventName = trimmedLine.slice(6).trim();
+                                    if (eventName === 'complete') {
+                                        console.log("Received complete event from server.");
+                                        // 可以在这里处理完成事件，但主要逻辑在 done 时
+                                    }
+                                }
+                            }
+
+                            // 继续读取下一块数据
+                            readStream();
+                        }).catch(error => {
+                            console.error('读取流失败', error);
+                            if (progressSwal) {
+                                progressSwal.fire({
+                                    icon: 'error',
+                                    title: '上传失败',
+                                    text: error.message
+                                });
+                            }
+                        });
+                    }
+
+                    // --- 辅助函数 ---
+
+                    // 处理一个完整的 SSE data 块
+                    function processSSEDataChunk(fullDataString) {
+                        try {
+                            // 移除可能存在的首尾引号（虽然在您的例子中没有，但以防万一）
+                            let cleanDataString = fullDataString.replace(/^"|"$/g, '');
+
+                            // 解析 JSON
+                            const parsedData = JSON.parse(cleanDataString);
+
+                            // 根据您提供的数据格式，parsedData 应该是一个数组
+                            if (Array.isArray(parsedData)) {
+                                // 遍历数组，寻找包含实际进度信息的对象
+                                for (const item of parsedData) {
+                                    if (item && typeof item.data === 'object' && item.data !== null) {
+                                        // 检查是否是包含 stage, message, progress 的对象
+                                        if (item.data.hasOwnProperty('progress') || item.data.hasOwnProperty('stage')) {
+                                            updateProgressUI(item.data);
+                                            break; // 找到并更新后即可退出循环
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (parseError) {
+                            console.warn('解析 SSE 数据块失败:', fullDataString, parseError);
+                        }
+                    }
+
+                    // 更新 UI 进度
+                    function updateProgressUI(progressData) {
+                        const progressBar = document.getElementById('progress-bar');
+                        const progressMessage = document.getElementById('progress-message');
+                        const progressStage = document.getElementById('progress-stage');
+
+                        if (progressBar && progressMessage && progressData) {
+                            // 更新进度百分比
+                            if (progressData.progress !== undefined) {
+                                const newWidth = `${progressData.progress}%`;
+                                progressBar.style.width = newWidth;
+                                progressBar.setAttribute('aria-valuenow', progressData.progress);
+                                progressBar.textContent = newWidth;
+                            }
+                            // 更新消息
+                            if (progressData.message) {
+                                progressMessage.textContent = progressData.message;
+                            }
+                            // 更新阶段
+                            if (progressData.stage && progressStage) {
+                                progressStage.textContent = `当前阶段：${progressData.stage}`;
+                            }
+                            console.log(`Progress Update: ${progressData.progress}% - ${progressData.stage} - ${progressData.message}`);
+                        }
+                    }
+
+                    // --- /辅助函数 ---
+
+                    // 开始读取
+                    readStream();
+                })
+                .catch(error => {
+                    console.error('上传请求失败', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: '上传失败',
+                        text: error.message
+                    });
+                });
+        }
+
+        // 删除文档
+        async function deleteDocument(docId, knowledgeId) {
+            // 先关闭详情弹窗，确保删除确认弹窗显示在最上层
+            closeDetailModal();
+
+            // 等待详情弹窗动画完成
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const result = await Swal.fire({
+                title: '确认删除',
+                text: '确定要删除该文档吗？此操作不可恢复！',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '删除',
+                cancelButtonText: '取消',
+                zIndex: 9999 // 设置更高的 z-index 确保在最上层
+            });
+
+            if (!result.isConfirmed) {
+                // 用户取消删除，重新打开详情弹窗
+                const currentKb = getCurrentKnowledge(knowledgeId);
+                if (currentKb) {
+                    showDetailModal(currentKb);
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/rag/doc/delete/${docId}?kbId=${knowledgeId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                const apiResult = await response.json();
+                if (apiResult.code === 200) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '成功',
+                        text: '文档删除成功',
+                        zIndex: 9999,
+                        timer: 1500 // 自动关闭
+                    }).then(() => {
+                        // 删除成功后，重新打开详情弹窗并刷新文档列表
+                        const currentKb = getCurrentKnowledge(knowledgeId);
+                        if (currentKb) {
+                            showDetailModal(currentKb);
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '错误',
+                        text: apiResult.message || '删除失败',
+                        zIndex: 9999
+                    });
+                }
+            } catch (error) {
+                console.error('删除文档失败', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: '错误',
+                    text: '网络请求失败',
+                    zIndex: 9999
+                });
+            }
+        }
+
+        // 删除知识库
+        async function deleteKnowledge(knowledgeId) {
+            // 先关闭详情弹窗
+            closeDetailModal();
+
+            // 等待详情弹窗动画完成
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const result = await Swal.fire({
+                title: '确认删除',
+                text: '确定要删除该知识库吗？这将同时删除所有文档和向量数据，此操作不可恢复！',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '删除',
+                cancelButtonText: '取消',
+                zIndex: 9999
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const response = await fetch(`/api/rag/kb/delete/${knowledgeId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                const apiResult = await response.json();
+                if (apiResult.code === 200) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '成功',
+                        text: '知识库删除成功',
+                        zIndex: 9999
+                    }).then(() => {
+                        loadKnowledgeList();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '错误',
+                        text: apiResult.message || '删除失败',
+                        zIndex: 9999
+                    });
+                }
+            } catch (error) {
+                console.error('删除知识库失败', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: '错误',
+                    text: '网络请求失败',
+                    zIndex: 9999
+                });
+            }
+        }
+
+        // 关闭详情弹窗
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+
+        // 搜索过滤
+        function filterKnowledge() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.knowledge-card');
+
+            cards.forEach(card => {
+                const title = card.querySelector('.knowledge-card-title').textContent.toLowerCase();
+                const desc = card.querySelector('.knowledge-card-desc').textContent.toLowerCase();
+
+                if (title.includes(searchText) || desc.includes(searchText)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            try {
+                const date = new Date(dateStr);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}`;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 点击模态框背景关闭
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('show');
+                }
+            });
+        });
+
+        // ESC 键关闭弹窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.show').forEach(overlay => {
+                    overlay.classList.remove('show');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

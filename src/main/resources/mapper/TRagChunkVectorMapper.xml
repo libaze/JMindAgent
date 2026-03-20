@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itheima.jmindagent.mapper.TRagChunkVectorMapper">
+
+    <!-- 批量插入（chunk_id 由代码手动生成 UUID） -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO t_rag_chunk_vector (
+            chunk_id,
+            kb_id,
+            doc_id,
+            chunk_content,
+            chunk_index,
+            embedding_vector,
+            vector_status,
+            create_time
+        ) VALUES
+        <foreach collection="list" item="chunk" separator=",">
+            (
+                #{chunk.chunkId},
+                #{chunk.kbId},
+                #{chunk.docId},
+                #{chunk.chunkContent},
+                #{chunk.chunkIndex},
+                #{chunk.embeddingVector,typeHandler=com.itheima.jmindagent.utils.StringToPgvectorTypeHandler},
+                #{chunk.vectorStatus},
+                #{chunk.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 向量相似度搜索（带最小相似度阈值） -->
+    <select id="selectBySimilarity" resultType="com.itheima.jmindagent.entity.TRagChunkVector">
+        SELECT
+            chunk_id,
+            kb_id,
+            doc_id,
+            chunk_content,
+            chunk_index,
+            embedding_vector,
+            vector_status,
+            create_time
+        FROM t_rag_chunk_vector
+        WHERE kb_id = #{kbId}
+          AND vector_status = 1
+          <![CDATA[
+          AND 1 - (embedding_vector::vector <=> #{queryVector}::vector) >= #{minSimilarity}
+          ]]>
+        ORDER BY embedding_vector::vector <![CDATA[<=>]]> #{queryVector}::vector
+            LIMIT #{topK}
+    </select>
+
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itheima.jmindagent.mapper.TChatHistoryMapper">
+
+    <!-- 查询指定会话的历史对话记录 -->
+    <select id="selectHistoryBySessionId" resultType="com.itheima.jmindagent.entity.dto.response.ChatHistoryItemResponse">
+        SELECT
+            msg_id AS msgId,
+            session_id AS sessionId,
+            user_id AS userId,
+            sender_type AS senderType,
+            content AS content,
+            msg_type AS msgType,
+            create_time AS createTime
+        FROM t_chat_history
+        WHERE session_id = #{sessionId}
+          AND user_id = #{userId}
+        ORDER BY create_time ASC
+    </select>
+
+</mapper>

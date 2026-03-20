@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能体管理 - JMindAgent</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-color: #f9fafb;
+            --sidebar-width: 280px;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .brand-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-item:hover {
+            background: var(--bg-color);
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary-color);
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .nav-item.active .nav-icon {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-navbar {
+            height: 70px;
+            padding: 0 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-menu-container {
+            position: relative;
+        }
+
+        .user-menu-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .user-menu-trigger:hover {
+            background: var(--bg-color);
+        }
+
+        .user-menu-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+        }
+
+        .user-menu-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 200px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: 1px solid #e5e7eb;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            transform-origin: top right;
+            display: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .user-menu-dropdown.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .user-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin: 4px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .user-menu-item:hover {
+            background: var(--bg-color);
+        }
+
+        .user-menu-item.danger {
+            color: #ef4444;
+        }
+
+        .user-menu-item.danger:hover {
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .content-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 300px;
+            padding: 10px 16px 10px 40px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .btn-create {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--primary-gradient);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .agent-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .agent-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .agent-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .agent-card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .agent-card-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .agent-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .agent-card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .agent-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .agent-card-time {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .agent-card-tools {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tool-badge {
+            padding: 4px 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .card-actions {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .agent-card:hover .card-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn.edit:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-large {
+            max-width: 800px;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-title i {
+            color: var(--primary-color);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(80vh - 80px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--danger-color);
+            margin-left: 4px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .tool-select-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .tool-select-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tool-select-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .tool-select-item.active {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tool-select-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .tool-select-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tool-select-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .tool-select-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tool-select-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: transparent;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .tool-select-item.active .tool-select-check {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: var(--bg-color);
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: #d1d5db;
+            background: var(--bg-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-section-title i {
+            color: var(--primary-color);
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            width: 120px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .detail-value {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            border-radius: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 40px;
+        }
+
+        .empty-state-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-state-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <span>JMindAgent</span>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <a href="/chat" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <span class="nav-text">智能对话</span>
+                </a>
+                <a href="/agent" class="nav-item active">
+                    <div class="nav-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <span class="nav-text">智能体管理</span>
+                </a>
+                <a href="/knowledge" class="nav-item">
+                    <div class="nav-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <span class="nav-text">知识库管理</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <!-- 顶部导航栏 -->
+            <div class="top-navbar">
+                <div class="navbar-left">
+                    <div class="page-title">智能体管理</div>
+                </div>
+                <div class="navbar-right">
+                    <div class="user-menu-container">
+                        <div class="user-menu-trigger" onclick="toggleUserMenu()">
+                            <img src="" alt="头像" class="user-menu-avatar" id="userMenuAvatar">
+                            <span class="user-menu-name" id="userMenuName">用户</span>
+                        </div>
+                        <div class="user-menu-dropdown" id="userMenuDropdown">
+                            <a href="/user/profile" class="user-menu-item">
+                                <div class="user-menu-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span>用户中心</span>
+                            </a>
+                            <div class="user-menu-item danger" onclick="logout()">
+                                <div class="user-menu-icon">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </div>
+                                <span>退出登录</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <div class="content-container">
+                    <!-- 工具栏 -->
+                    <div class="toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" id="searchInput" placeholder="搜索智能体..." oninput="filterAgents()">
+                            </div>
+                        </div>
+                        <button class="btn-create" onclick="openCreateModal()">
+                            <i class="fas fa-plus"></i>
+                            <span>创建智能体</span>
+                        </button>
+                    </div>
+
+                    <!-- 智能体列表 -->
+                    <div class="agent-grid" id="agentGrid">
+                        <!-- 动态加载智能体卡片 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建智能体弹窗 -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>创建智能体</span>
+                </div>
+                <button class="modal-close" onclick="closeCreateModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createForm">
+                    <div class="form-group">
+                        <label class="form-label required">智能体名称</label>
+                        <input type="text" class="form-input" id="createName" placeholder="请输入智能体名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">智能体描述</label>
+                        <textarea class="form-input form-textarea" id="createDesc" placeholder="请输入智能体描述" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">专属提示词</label>
+                        <textarea class="form-input form-textarea" id="createPrompt" placeholder="请输入专属提示词（选填）" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">选择工具</label>
+                        <div class="tool-select-list" id="createToolList">
+                            <!-- 动态加载工具列表 -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCreateModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitCreate()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑智能体弹窗 -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    <span>编辑智能体</span>
+                </div>
+                <button class="modal-close" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editAgentId">
+                    <div class="form-group">
+                        <label class="form-label required">智能体名称</label>
+                        <input type="text" class="form-input" id="editName" placeholder="请输入智能体名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">智能体描述</label>
+                        <textarea class="form-input form-textarea" id="editDesc" placeholder="请输入智能体描述" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">专属提示词</label>
+                        <textarea class="form-input form-textarea" id="editPrompt" placeholder="请输入专属提示词" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">选择工具</label>
+                        <div class="tool-select-list" id="editToolList">
+                            <!-- 动态加载工具列表 -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitEdit()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 智能体详情弹窗 -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>智能体详情</span>
+                </div>
+                <button class="modal-close" onclick="closeDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="detailContent">
+                <!-- 动态加载详情内容 -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDetailModal()">关闭</button>
+                <button class="btn btn-primary" onclick="editCurrentAgent()">
+                    <i class="fas fa-edit me-2"></i>编辑
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 选择工具弹窗 -->
+    <div class="modal-overlay" id="toolSelectModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-tools"></i>
+                    <span>选择工具</span>
+                </div>
+                <button class="modal-close" onclick="closeToolSelectModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="tool-select-list" id="toolSelectList">
+                    <!-- 动态加载工具列表 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeToolSelectModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmToolSelection()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 全局变量
+        let agents = [];
+        let tools = [];
+        let currentAgentId = null;
+        let selectedToolIds = new Set();
+        let toolSelectCallback = null;
+
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadTools();
+            loadAgents();
+        });
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    document.getElementById('userMenuName').textContent = payload.username || '用户';
+                    document.getElementById('userMenuAvatar').src = payload.avatar || '/default-avatar.png';
+                } catch (e) {
+                    console.error('Token 解析失败:', e);
+                }
+            }
+        }
+
+        // 切换用户菜单
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userMenuDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
+        }
+
+        // 加载智能体列表
+        async function loadAgents() {
+            try {
+                const response = await fetch('/api/agent/list', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                const result = await response.json();
+                
+                if (result.code === 200 && result.data) {
+                    agents = result.data.list || [];
+                    renderAgents();
+                } else {
+                    showMessage('加载智能体列表失败', 'error');
+                }
+            } catch (error) {
+                console.error('加载智能体列表失败:', error);
+                showMessage('网络错误', 'error');
+            }
+        }
+
+        // 加载工具列表
+        async function loadTools() {
+            try {
+                const response = await fetch('/api/tool/list', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                const result = await response.json();
+
+                if (result.code === 200 && result.data) {
+                    // data 本身就是工具包数组，不需要再访问 .list
+                    tools = result.data || [];
+                    console.log('加载工具列表成功:', tools);
+                } else {
+                    console.warn('加载工具列表失败');
+                }
+            } catch (error) {
+                console.error('加载工具列表失败:', error);
+            }
+        }
+
+        // 渲染智能体列表
+        function renderAgents(filterText = '') {
+            const grid = document.getElementById('agentGrid');
+            
+            const filteredAgents = agents.filter(agent => {
+                if (!filterText) return true;
+                return agent.agentName.toLowerCase().includes(filterText.toLowerCase()) ||
+                       agent.agentDesc.toLowerCase().includes(filterText.toLowerCase());
+            });
+
+            if (filteredAgents.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="empty-state-title">暂无智能体</div>
+                        <div class="empty-state-desc">点击右上角"创建智能体"按钮创建您的第一个智能体</div>
+                        <button class="btn btn-primary" onclick="openCreateModal()">
+                            <i class="fas fa-plus me-2"></i>创建智能体
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filteredAgents.map(agent => {
+                const toolCount = agent.toolList ? agent.toolList.length : 0;
+                const createTime = formatDateTime(agent.createTime);
+                
+                return `
+                    <div class="agent-card" onclick="showAgentDetail('${agent.agentId}')">
+                        <div class="card-actions">
+                            <button class="action-btn edit" onclick="event.stopPropagation(); openEditModal('${agent.agentId}')" title="编辑">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="event.stopPropagation(); deleteAgent('${agent.agentId}')" title="删除">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="agent-card-header">
+                            <div class="agent-card-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="agent-card-info">
+                                <div class="agent-card-title">${escapeHtml(agent.agentName)}</div>
+                                <div class="agent-card-desc">${escapeHtml(agent.agentDesc || '暂无描述')}</div>
+                            </div>
+                        </div>
+                        <div class="agent-card-meta">
+                            <div class="agent-card-time">
+                                <i class="far fa-clock me-1"></i>${createTime}
+                            </div>
+                            <div class="agent-card-tools">
+                                ${toolCount > 0 ? `<span class="tool-badge"><i class="fas fa-tools me-1"></i>${toolCount}个工具</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 筛选智能体
+        function filterAgents() {
+            const searchText = document.getElementById('searchInput').value;
+            renderAgents(searchText);
+        }
+
+        // 打开创建弹窗
+        function openCreateModal() {
+            document.getElementById('createForm').reset();
+            selectedToolIds.clear();
+            renderToolSelection('createToolList');
+            showModal('createModal');
+        }
+
+        // 关闭创建弹窗
+        function closeCreateModal() {
+            hideModal('createModal');
+        }
+
+        // 打开编辑弹窗
+        async function openEditModal(agentId) {
+            const agent = agents.find(a => a.agentId === agentId);
+            if (!agent) return;
+
+            document.getElementById('editAgentId').value = agent.agentId;
+            document.getElementById('editName').value = agent.agentName;
+            document.getElementById('editDesc').value = agent.agentDesc || '';
+            document.getElementById('editPrompt').value = agent.agentPrompt || '';
+
+            // 设置已选工具包（使用 toolPackageId）
+            selectedToolIds.clear();
+            if (agent.toolList) {
+                agent.toolList.forEach(tool => {
+                    // 注意：这里应该使用 toolPackageId 而不是 toolId
+                    if (tool.toolPackageId) {
+                        selectedToolIds.add(tool.toolPackageId);
+                    } else if (tool.toolId) {
+                        selectedToolIds.add(tool.toolId);
+                    }
+                });
+            }
+
+            renderToolSelection('editToolList');
+            showModal('editModal');
+        }
+
+        // 关闭编辑弹窗
+        function closeEditModal() {
+            hideModal('editModal');
+        }
+
+        // 显示智能体详情
+        async function showAgentDetail(agentId) {
+            const agent = agents.find(a => a.agentId === agentId);
+            if (!agent) return;
+
+            currentAgentId = agentId;
+            const content = document.getElementById('detailContent');
+            
+            const toolList = agent.toolList || [];
+            const toolsHtml = toolList.length > 0 
+                ? toolList.map(tool => `
+                    <div style="padding: 8px 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; margin-bottom: 8px;">
+                        <div style="font-weight: 600; color: var(--primary-color); font-size: 14px;">
+                            <i class="fas fa-wrench me-2"></i>${escapeHtml(tool.toolAlias || tool.toolName)}
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                            ${escapeHtml(tool.toolDescription || tool.toolDesc || '暂无描述')}
+                        </div>
+                    </div>
+                `).join('')
+                : '<div style="color: var(--text-secondary); font-size: 14px;">未绑定工具</div>';
+
+            content.innerHTML = `
+                <div class="detail-section">
+                    <div class="detail-section-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span>基本信息</span>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">智能体 ID：</div>
+                        <div class="detail-value">${agent.agentId}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">智能体名称：</div>
+                        <div class="detail-value">${escapeHtml(agent.agentName)}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">描述：</div>
+                        <div class="detail-value">${escapeHtml(agent.agentDesc || '暂无描述')}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">创建时间：</div>
+                        <div class="detail-value">${formatDateTime(agent.createTime)}</div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">
+                        <i class="fas fa-font"></i>
+                        <span>专属提示词</span>
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-color); border-radius: 10px; font-size: 14px; line-height: 1.6;">
+                        ${escapeHtml(agent.agentPrompt || '暂无专属提示词')}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">
+                        <i class="fas fa-tools"></i>
+                        <span>绑定工具（${toolList.length}个）</span>
+                    </div>
+                    ${toolsHtml}
+                </div>
+            `;
+
+            showModal('detailModal');
+        }
+
+
+        // 关闭详情弹窗
+        function closeDetailModal() {
+            hideModal('detailModal');
+            currentAgentId = null;
+        }
+
+        // 编辑当前智能体
+        function editCurrentAgent() {
+            if (currentAgentId) {
+                hideModal('detailModal');
+                // 等待详情弹窗完全关闭后再打开编辑弹窗
+                setTimeout(() => {
+                    openEditModal(currentAgentId);
+                }, 300);
+            }
+        }
+
+        // 渲染工具选择列表
+        function renderToolSelection(containerId) {
+            const container = document.getElementById(containerId);
+
+            if (!tools || tools.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fas fa-inbox" style="font-size: 40px; margin-bottom: 12px;"></i>
+                        <div>暂无可用工具</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = tools.map(toolPackage => {
+                const toolPackageId = toolPackage.toolPackageId;
+                const isActive = selectedToolIds.has(toolPackageId) ? 'active' : '';
+
+                return `
+                    <div class="tool-select-item ${isActive}" onclick="toggleToolSelection('${toolPackageId}', '${containerId}')">
+                        <div class="tool-select-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="tool-select-info">
+                            <div class="tool-select-name">${escapeHtml(toolPackage.toolAlias)}</div>
+                            <div class="tool-select-desc" style="margin-bottom: 8px;">${escapeHtml(toolPackage.toolDescription || '暂无描述')}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                <i class="fas fa-list"></i> 包含 ${toolPackage.methods ? toolPackage.methods.length : 0} 个方法
+                            </div>
+                        </div>
+                        <div class="tool-select-check">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 切换工具选择
+        function toggleToolSelection(toolId, containerId) {
+            if (selectedToolIds.has(toolId)) {
+                selectedToolIds.delete(toolId);
+            } else {
+                selectedToolIds.add(toolId);
+            }
+            renderToolSelection(containerId);
+        }
+
+        // 提交创建
+        async function submitCreate() {
+            const name = document.getElementById('createName').value.trim();
+            const desc = document.getElementById('createDesc').value.trim();
+            const prompt = document.getElementById('createPrompt').value.trim();
+
+            if (!name) {
+                showMessage('请输入智能体名称', 'error');
+                return;
+            }
+
+            if (selectedToolIds.size === 0) {
+                showMessage('请至少选择一个工具包', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/agent/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({
+                        agentName: name,
+                        agentDesc: desc,
+                        prompt: prompt,
+                        toolIds: Array.from(selectedToolIds)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    showMessage('创建成功', 'success');
+                    closeCreateModal();
+                    loadAgents();
+                } else {
+                    showMessage(result.message || '创建失败', 'error');
+                }
+            } catch (error) {
+                console.error('创建智能体失败:', error);
+                showMessage('网络错误', 'error');
+            }
+        }
+
+        // 提交编辑
+        async function submitEdit() {
+            const agentId = document.getElementById('editAgentId').value;
+            const name = document.getElementById('editName').value.trim();
+            const desc = document.getElementById('editDesc').value.trim();
+            const prompt = document.getElementById('editPrompt').value.trim();
+
+            if (!name) {
+                showMessage('请输入智能体名称', 'error');
+                return;
+            }
+
+            if (selectedToolIds.size === 0) {
+                showMessage('请至少选择一个工具包', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/agent/update/${agentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({
+                        agentName: name,
+                        agentDesc: desc,
+                        prompt: prompt,
+                        toolIds: Array.from(selectedToolIds)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    showMessage('更新成功', 'success');
+                    closeEditModal();
+                    loadAgents();
+                } else {
+                    showMessage(result.message || '更新失败', 'error');
+                }
+            } catch (error) {
+                console.error('更新智能体失败:', error);
+                showMessage('网络错误', 'error');
+            }
+        }
+
+        // 删除智能体
+        async function deleteAgent(agentId) {
+            const result = await Swal.fire({
+                title: '确认删除',
+                text: '确定要删除这个智能体吗？此操作不可恢复！',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '删除',
+                cancelButtonText: '取消',
+                zIndex: 9999
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const response = await fetch(`/api/agent/delete/${agentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '成功',
+                        text: '智能体删除成功',
+                        zIndex: 9999
+                    }).then(() => {
+                        loadAgents();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '错误',
+                        text: result.message || '删除失败',
+                        zIndex: 9999
+                    });
+                }
+            } catch (error) {
+                console.error('删除智能体失败:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: '错误',
+                    text: '网络请求失败',
+                    zIndex: 9999
+                });
+            }
+        }
+
+
+        // 显示弹窗
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 隐藏弹窗
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // 格式化日期时间
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 显示消息提示
+        function showMessage(message, type = 'info') {
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#667eea'
+            };
+            
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 16px 24px;
+                background: ${colors[type]};
+                color: white;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+                z-index: 3000;
+                animation: slideIn 0.3s ease;
+                font-size: 14px;
+                font-weight: 500;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 点击遮罩层关闭弹窗
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        // 阻止表单默认提交
+        document.getElementById('createForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
